@@ -1,0 +1,10 @@
+build/
+sim/work/
+*.jou
+*.log
+*.str
+.Xil/
+xsim.dir/
+*.wdb
+*.pb
+*.cf
