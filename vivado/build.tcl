@@ -55,6 +55,17 @@ add_files [glob $root/rtl/*.vhd]
 add_files -fileset constrs_1 $root/vivado/arty_z7_20.xdc
 update_compile_order -fileset sources_1
 
+# simulation: the testbenches are part of the project, so Flow Navigator ->
+# Run Simulation works in the GUI. Default top: tb_ADC_DAC (runs in seconds);
+# switch the sim top to tb_Tone_Recognition for the tone test (a few minutes).
+set tbs [list $root/sim/Tone_Generator.vhd $root/sim/tb_ADC_DAC.vhd $root/sim/tb_Tone_Recognition.vhd]
+add_files -fileset sim_1 $tbs
+foreach f $tbs { set_property file_type {VHDL 2008} [get_files $f] }
+set_property top tb_ADC_DAC [get_filesets sim_1]
+set_property top_lib xil_defaultlib [get_filesets sim_1]
+set_property -name {xsim.simulate.runtime} -value {all} -objects [get_filesets sim_1]
+update_compile_order -fileset sim_1
+
 # --- block design ------------------------------------------------------------
 create_bd_design system
 

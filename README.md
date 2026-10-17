@@ -161,9 +161,13 @@ The whole tester runs from one 28 V input: ±15 V, +5 V, 3.3 V, 3 V and 0.7 V ar
 
 ## Quick start
 
-**Requirements:** AMD Vivado + Vitis (the 2022 original used Vivado and Xilinx SDK). For simulation only, [GHDL](https://github.com/ghdl/ghdl) or [nvc](https://github.com/nickg/nvc) is enough. Optional: [Digilent board files](https://github.com/Digilent/vivado-boards). When they are installed, the build applies the Arty Z7-20 PS preset automatically.
+**Requirements:** AMD Vivado (the free Standard edition supports the Zynq-7020) and Vitis for the firmware. For simulation only, [GHDL](https://github.com/ghdl/ghdl) or [nvc](https://github.com/nickg/nvc) is enough. Optional: [Digilent board files](https://github.com/Digilent/vivado-boards). When they are installed, the build applies the Arty Z7-20 PS preset automatically.
 
-**1. Set your tones** in [`rtl/Tone_Config.vhd`](rtl/Tone_Config.vhd) (see below).
+**0. Get the code.** `git clone https://github.com/OfirSipp/Avionics-UUT-Tester.git`, or **Code → Download ZIP** on GitHub and extract it. Put it in a short path without spaces or parentheses, e.g. `C:\fpga\Avionics-UUT-Tester`.
+
+No board needed for steps 1-3: you can simulate everything and open the full design in Vivado.
+
+**1. Set your tones** in [`rtl/Tone_Config.vhd`](rtl/Tone_Config.vhd) (see below), or keep the examples.
 
 **2. Simulate.** Both testbenches are self-checking and end with `ALL TESTS PASSED`.
 
@@ -183,7 +187,13 @@ sh sim/run_sim.sh
 vivado -mode batch -source vivado\build.tcl
 ```
 
-The result is `build/uut_tester.xsa`. Add `-tclargs bd` to stop after the block design.
+Run it from the extracted folder, in a terminal where `vivado` is on the PATH (on Windows: the **Vivado Tcl Shell** from the Start menu). The result is `build/uut_tester.xsa` plus utilization and timing reports in `build/`. Add `-tclargs bd` to stop after the block design (under a minute).
+
+**Explore it in the Vivado window.** Open `build/uut_tester.xpr` in Vivado, then:
+
+- **Open Block Design** - the Zynq PS, AXI SmartConnect, the AXI GPIO peripherals and the RTL modules, wired as described [below](#fpga-design).
+- **Run Simulation → Run Behavioral Simulation** - opens the waveform viewer on `tb_ADC_DAC`. For the tone test, right-click `tb_Tone_Recognition` under *Simulation Sources* → **Set as Top** and run again (it simulates about 7 s of signals, so allow a few minutes).
+- **Open Implemented Design** - placement, utilization and timing, after a full build.
 
 **4. Firmware.** In Vitis, create a platform from `build/uut_tester.xsa` (standalone, `ps7_cortexa9_0`), create an empty C application, add the files from `sw/`, build, and run on the board. Replace the example steps in `sw/C_MainControl.c` with your unit's procedure first.
 
