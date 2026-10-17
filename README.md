@@ -86,7 +86,7 @@ flowchart RL
     MUX --> IBUF
     IBUF --> ADC
     ADC <-- SPI --> ADCIF
-    ADCIF -- "ADCIF <-- "AXI - 16-bit sample + flag" --> CTRL
+    ADCIF <-- "AXI - 16-bit sample + flag" --> CTRL
     CTRL <-- "AXI - SmartConnect" --> TONE
     CTRL -- "AXI - 12-bit word + flag" --> DACIF
     CTRL -- 13 relay drives --> LS
