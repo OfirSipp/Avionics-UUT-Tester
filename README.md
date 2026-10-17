@@ -57,7 +57,7 @@ flowchart RL
   end
  subgraph MEAS["Interface board · measurement"]
         IN28["<b>28 V DC in</b><br>fuse · on/off switch"]
-        MUX["<b>MAX4534</b><br>4:1 analog MUX<br>select A0 · A1 · EN<br>IO36 · IO37 · IO38"]
+        MUX["<b>MAX4534</b><br>4:1 analog MUX"]
         IBUF["<b>LT1468</b><br>input buffer"]
         ADC["<b>LTC2327-16</b><br>16-bit SAR ADC<br>±10.24 V · 4.096 V ref"]
         REC["<b>REC10-2815</b><br>±15 V"]
@@ -108,7 +108,7 @@ flowchart RL
     HMI["<b>Touchscreen HMI</b><br>Nextion NX4827T043"] <-- UART<br> --> CTRL
     PC["<b>PC</b><br>Vivado · Xilinx SDK"] -- JTAG over USB --> SOC
     PC <-- USB --> USB["<b>UM232R</b><br>USB-UART bridge"]
-    USB <-- UART · IO32 · IO33<br>HMI programming --> SOC
+    USB <-- UART<br>HMI programming --> SOC
 
      UOUT:::uut
      UIN:::uut
