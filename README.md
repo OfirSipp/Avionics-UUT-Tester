@@ -51,11 +51,11 @@ config:
     rankSpacing: 50
 ---
 flowchart RL
- subgraph UOUTS["Unit under test · outputs"]
+ subgraph UOUTS["Unit under test"]
         UOUT["<b>4 output lines</b><br>audio tones and levels"]
-        UIN["<b>28 V power <br>· discrete controls<br>· analog stimulus"]
+        UIN["<b>28 V power</b><br>discrete controls<br>analog stimulus"]
   end
- subgraph MEAS["Interface board · measurement"]
+ subgraph MEAS["Interface board"]
         IN28["<b>28 V DC in</b><br>fuse · on/off switch"]
         MUX["<b>MAX4534</b><br>4:1 analog MUX"]
         IBUF["<b>LT1468</b><br>input buffer"]
@@ -74,7 +74,7 @@ flowchart RL
  subgraph PL["PL - Artix-7"]
         ADCIF["<b>ADC_LTC</b> · PL · VHDL<br>LTC2327 serial readout<br>16-bit sample + ready flag"]
         DACIF["<b>DAC8043FP2</b> · PL · VHDL<br>DAC8043 serial loader<br>12-bit word"]
-        TONE["<b>Tone_Recognition</b> · PL · VHDL<br>"]
+        TONE["<b>Tone_Recognition</b>Tone_Recognition</b> · PL · VHDL<br>alert-pattern recognition<br>30 grace cycles · 3-cycle confirm<br>"]
   end
  subgraph SOC["Xilinx Zynq-7020 · Digilent Arty Z7-20"]
         CTRL["PS-ARM Cortex-A9 C_MainControl · <br>runs the test procedure"]
@@ -86,11 +86,11 @@ flowchart RL
     MUX --> IBUF
     IBUF --> ADC
     ADC <-- SPI --> ADCIF
-    ADCIF -- "AXI - 16-bit sample + flag" <--> CTRL
+    ADCIF -- "ADCIF <-- "AXI - 16-bit sample + flag" --> CTRL
     CTRL <-- "AXI - SmartConnect" --> TONE
     CTRL -- "AXI - 12-bit word + flag" --> DACIF
-    CTRL -- 13 relay drives<br> --> LS
-    CTRL -- AXI GPIO<br> --> MUX
+    CTRL -- 13 relay drives --> LS
+    CTRL -- AXI GPIO --> MUX
     LS --> NPN
     NPN --> K
     DACIF -- SPI --> DAC
