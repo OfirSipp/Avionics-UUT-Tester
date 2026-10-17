@@ -42,56 +42,107 @@ A semi-automatic tester that replaces the old bench. It is built around a **Xili
 ## System architecture
 
 ```mermaid
-flowchart LR
-  subgraph UUTO["Unit under test"]
-    OUT["4 outputs<br/>audio tones · DC levels"]
+---
+config:
+  theme: dark
+  flowchart:
+    curve: basis
+    nodeSpacing: 30
+    rankSpacing: 50
+---
+flowchart RL
+ subgraph UOUTS["Unit under test · outputs"]
+        UOUT["<b>4 output lines</b><br>audio tones and levels"]
+        UIN["<b>28 V power <br>· discrete controls<br>· analog stimulus"]
   end
-  subgraph MEAS["Interface board · measurement"]
-    MUX["MAX4534<br/>4:1 analog MUX"] --> BUF["LT1468<br/>buffer"] --> ADC["LTC2327-16<br/>16-bit SAR ADC"]
+ subgraph MEAS["Interface board · measurement"]
+        IN28["<b>28 V DC in</b><br>fuse · on/off switch"]
+        MUX["<b>MAX4534</b><br>4:1 analog MUX<br>select A0 · A1 · EN<br>IO36 · IO37 · IO38"]
+        IBUF["<b>LT1468</b><br>input buffer"]
+        ADC["<b>LTC2327-16</b><br>16-bit SAR ADC<br>±10.24 V · 4.096 V ref"]
+        REC["<b>REC10-2815</b><br>±15 V"]
+        PYB["<b>PYB30-Q24</b><br>+5 V"]
+        P33["<b>PTH04070W</b><br>3.3 V · Rset 475 Ω"]
+        P30["<b>PTH04070W</b><br>3.0 V · Rset 1 kΩ"]
+        V07["<b>+0.7 V</b><br>diode drop from 3.3 V"]
+        LS["<b>3 × CD4504B</b><br>level shifters from 3.3 V<br>6 + 6 + 1 channels"]
+        NPN["<b>13 × NPN</b><br>200 Ω base<br>low-side coil drive relays"]
+        K["<b>13 × W172DIP</b> reed relays<br>5 single · 4 paired<br>9 switched lines"]
+        DAC["<b>DAC8043</b><br>12-bit · unipolar<br>Vref 10 V"]
+        OBUF["<b>LT1468</b> · ±15 V<br>I-to-V output buffer<br>Rfb + 15 pF"]
   end
-  subgraph SOC["Zynq-7020 · Arty Z7-20"]
-    subgraph PL["PL · VHDL · 50 MHz"]
-      ADCIF["ADC_LTC<br/>serial readout"]
-      TONE["Tone_Recognition<br/>alert patterns"]
-      DACIF["DAC8043FP2<br/>serial loader"]
-      GPIO["AXI GPIO × 6<br/>AXI UART Lite"]
-    end
-    PS["PS · ARM Cortex-A9<br/>C_MainControl<br/>test procedure"]
+ subgraph PL["PL - Artix-7"]
+        ADCIF["<b>ADC_LTC</b> · PL · VHDL<br>LTC2327 serial readout<br>16-bit sample + ready flag"]
+        DACIF["<b>DAC8043FP2</b> · PL · VHDL<br>DAC8043 serial loader<br>12-bit word"]
+        TONE["<b>Tone_Recognition</b> · PL · VHDL<br>"]
   end
-  subgraph STIM["Interface board · stimulus"]
-    DAC["DAC8043<br/>12-bit DAC"] --> OBUF["LT1468<br/>I-to-V"]
-    LS["CD4504B<br/>level shifters"] --> K["13 reed relays<br/>NPN drivers"]
+ subgraph SOC["Xilinx Zynq-7020 · Digilent Arty Z7-20"]
+        CTRL["PS-ARM Cortex-A9 C_MainControl · <br>runs the test procedure"]
+        PL
+        
   end
-  subgraph UUTI["Unit under test"]
-    IN["power · DIN1-DIN7<br/>analog input"]
-  end
-  HMI["Nextion 4.3-inch<br/>touch screen"]
+  
+    UOUT -- 4 lines --> MUX
+    MUX --> IBUF
+    IBUF --> ADC
+    ADC <-- SPI --> ADCIF
+    ADCIF -- "AXI - 16-bit sample + flag" <--> CTRL
+    CTRL <-- "AXI - SmartConnect" --> TONE
+    CTRL -- "AXI - 12-bit word + flag" --> DACIF
+    CTRL -- 13 relay drives<br> --> LS
+    CTRL -- AXI GPIO<br> --> MUX
+    LS --> NPN
+    NPN --> K
+    DACIF -- SPI --> DAC
+    DAC --> OBUF
+    OBUF -- DAC out --> K
+    K -- "Data to UUT" --> UIN
+    IN28 --> REC & PYB
+    PYB --> P33 & P30
+    P33 --> V07
+    REC -. ±15 V .-> OBUF
+    IN28 -. +28 V .-> K
+    PYB -. +5 V .-> K
+    P30 -. +3 V .-> K
+    V07 -. "+0.7 V" .-> K
+    HMI["<b>Touchscreen HMI</b><br>Nextion NX4827T043"] <-- UART<br> --> CTRL
+    PC["<b>PC</b><br>Vivado · Xilinx SDK"] -- JTAG over USB --> SOC
+    PC <-- USB --> USB["<b>UM232R</b><br>USB-UART bridge"]
+    USB <-- UART · IO32 · IO33<br>HMI programming --> SOC
 
-  OUT --> MUX
-  ADC <-- "CNV · BUSY · SCK · SDO" --> ADCIF
-  ADCIF --> GPIO
-  GPIO <--> TONE
-  GPIO --> DACIF
-  PS <-- "AXI4-Lite · SmartConnect" --> GPIO
-  DACIF -- "CLK · SRI · LD" --> DAC
-  GPIO -- "13 relay drives" --> LS
-  GPIO -- "A0 · A1 · EN" --> MUX
-  OBUF --> K
-  K --> IN
-  GPIO <-- "UART 9600" --> HMI
-
-  classDef ps fill:#15213a,stroke:#86abff,color:#e6edf3
-  classDef pl fill:#251c0e,stroke:#f6a92e,color:#f3e6cf
-  classDef focus fill:#f6a92e,stroke:#ffcf7a,color:#1c1306
-  classDef brd fill:#0f2420,stroke:#35d2a8,color:#e1f5ee
-  classDef uut fill:#2a1420,stroke:#f37fa3,color:#f6e3ea
-  classDef ext fill:#161d25,stroke:#9aa9b8,color:#e6edf3
-  class PS ps
-  class ADCIF,DACIF,GPIO pl
-  class TONE focus
-  class MUX,BUF,ADC,DAC,OBUF,LS,K brd
-  class OUT,IN uut
-  class HMI ext
+     UOUT:::uut
+     UIN:::uut
+     IN28:::pwr
+     MUX:::brd
+     IBUF:::brd
+     ADC:::brd
+     REC:::pwr
+     PYB:::pwr
+     P33:::pwr
+     P30:::pwr
+     V07:::pwr
+     LS:::brd
+     NPN:::brd
+     K:::brd
+     DAC:::brd
+     OBUF:::brd
+     ADCIF:::pl
+     DACIF:::pl
+     TONE:::focus
+     CTRL:::ps
+     HMI:::ext
+     PC:::ext
+     USB:::ext
+    classDef ps fill:#15213a,stroke:#86abff,stroke-width:1.5px,color:#e6edf3
+    classDef pl fill:#251c0e,stroke:#f6a92e,stroke-width:1.5px,color:#f3e6cf
+    classDef focus fill:#f6a92e,stroke:#ffcf7a,stroke-width:2px,color:#1c1306
+    classDef brd fill:#0f2420,stroke:#35d2a8,stroke-width:1.5px,color:#e1f5ee
+    classDef pwr fill:#13201d,stroke:#2c7f69,stroke-width:1.2px,color:#cfe9e1
+    classDef uut fill:#2a1420,stroke:#f37fa3,stroke-width:1.5px,color:#f6e3ea
+    classDef ext fill:#161d25,stroke:#9aa9b8,stroke-width:1.2px,color:#e6edf3
+    style SOC fill:#0d141c,stroke:#4a5a6c,stroke-width:1px,stroke-dasharray: 6 4,color:#cdd6df
+    style MEAS fill:#0b1614,stroke:#2c7f69,stroke-width:1px,stroke-dasharray: 6 4,color:#35d2a8
+    style UOUTS fill:#160f14,stroke:#f37fa3,stroke-width:1px,stroke-dasharray: 6 4,color:#f37fa3
 ```
 
 The whole tester runs from one 28 V input: ±15 V, +5 V, 3.3 V, 3 V and 0.7 V are made on the interface board ([docs/interface_board.md](docs/interface_board.md)).
