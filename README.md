@@ -74,7 +74,7 @@ flowchart RL
  subgraph PL["PL - Artix-7"]
         ADCIF["<b>ADC_LTC</b> · PL · VHDL<br>LTC2327 serial readout<br>16-bit sample + ready flag"]
         DACIF["<b>DAC8043FP2</b> · PL · VHDL<br>DAC8043 serial loader<br>12-bit word"]
-        TONE["<b>Tone_Recognition</b>Tone_Recognition</b> · PL · VHDL<br>alert-pattern recognition<br>30 grace cycles · 3-cycle confirm<br>"]
+        TONE["<b>Tone_Recognition</b> · PL · VHDL<br>alert-pattern recognition<br>30 grace cycles · 3-cycle confirm"]
   end
  subgraph SOC["Xilinx Zynq-7020 · Digilent Arty Z7-20"]
         CTRL["PS-ARM Cortex-A9 C_MainControl · <br>runs the test procedure"]
